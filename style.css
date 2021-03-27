@@ -1,0 +1,255 @@
+/*Global CSS*/
+*{
+  margin:0;
+	padding: 0;
+	box-sizing: border-box;
+}
+body{
+	background-color: #f3f3f3;
+	font-family: "Poppins", sans-serif;
+	color: #444;
+	height: 100vh;
+  padding: 1rem 2rem;
+}
+
+/*---------------------Designing the Top Navigation------------------------*/
+nav{
+	display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+nav > .welcome{
+	font-size: 1.6rem;
+	font-weight: 500;
+}
+nav > .logo{
+	height: 3rem;
+}
+
+/*Designing Form*/
+.login{
+	display: flex;
+}
+.login > .login__input{
+	border: none;
+  font-family: inherit;
+	font-size: 1.1rem;
+  padding: 0.4rem .3rem;
+  border-radius: 14rem;
+	width: 9rem;
+  margin-right: 10px;
+	text-align: center;
+	color: inherit;
+	transition: all 0.3s;
+}
+.login > .login__input:focus{
+	outline: none;
+	border: 1px solid #ccc;
+}
+.login > .login__input::placeholder{
+	color: #bbb;
+}
+/*
+.login > .login__input.login__input--user{}
+.login > .login__input.login__input--pin{}
+*/
+.login > .login__btn{
+	cursor: pointer;
+	color: inherit;
+	border: none;
+	background: none;
+	font-size: 1.5rem;
+}
+.login > .login__btn:focus,
+.login > .login__btn:hover,
+.btn--sort:focus,
+.btn--sort:hover{
+	outline: none;
+	color: #777;
+}
+/*-----------------------------Designing The Main App-----------------------------*/
+.app{
+  position: relative;
+  max-width: 62rem;
+  margin: 4rem auto;
+  display: grid;
+  grid-template-columns: 4fr 3fr;
+  grid-template-rows: auto repeat(3, 10rem) auto;
+  gap: 2rem;
+
+	  /* NOTE This creates the fade in/out anumation */
+  opacity: 0;
+  transition: all 1s;
+}
+.app.open{
+	opacity: 1;
+}
+
+/*BALANCE*/
+.balance{
+	grid-column: 1 / span 2;
+	display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+}
+.balance .balance__label{
+	font-size: 1.6rem;
+	font-weight: 300;
+	margin-bottom: .2rem;
+}
+.balance .balance__date{
+	font-size: .8rem;
+	color: #888;
+}
+.balance .balance__value{
+	font-size: 3rem;
+}
+
+/*MOVEMENTS*/
+.movements{
+	grid-row: 2 / span 3;
+  background-color: #fff;
+  border-radius: 1rem;
+  overflow: scroll;
+}
+.movements__row{
+	padding: .875rem 1.8rem;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+}
+.movements__type{
+	border-radius: 2rem;
+  padding: .1rem 1rem;
+  font-size: .87rem;
+  color: #fff;
+  font-weight: 500;
+  margin-right: 2rem;
+}
+.movements__date{
+	color: #b5aaaa;
+  font-size: .75rem;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.movements__value{
+	margin-left: auto;
+}
+.movements__type--deposit{
+	background-image: linear-gradient(to top left, #39b385, #9be15d);
+}
+.movements__type--withdrawal{
+	background-image: linear-gradient(to top left, #e52a5a, #ff585f);
+}
+
+/*SUMMERY*/
+.summary{
+  grid-row: 5 / 6;
+  display: flex;
+  align-items: baseline;
+  padding: 0 0.5rem;
+  margin-top: 1rem;
+}
+.summary__label{
+	margin-right: .8rem;
+	text-transform: uppercase;
+	font-size: .8rem;
+	font-weight: 500;
+}
+.summary__value{
+	font-size: 1.5rem;
+	margin-right: 1rem;
+}
+.summary .btn--sort{
+	margin-left: auto;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+}
+.summary__value--in,
+.summary__value--interest {
+  color: #66c873;
+}
+.summary__value--out {
+  color: #f5465d;
+}
+
+/*OPERATION CSS RIGHT SIDE*/
+.operation{
+	border-radius: 20px;
+  padding: 1rem 2rem;
+	color: #333;
+}
+.operation__title{
+	color: #333;
+	font-size: 1.75rem;
+  font-weight: 500;
+  margin-bottom: .675rem;
+}
+.form{
+	display: grid;
+	grid-template-columns: 2.5fr 2.5fr 1fr;
+	gap: 0.4rem 1rem;
+	grid-template-rows: auto auto;
+}
+.form__input{
+	width: 100%;
+	background-color: rgba(255, 255, 255, 0.4);
+	font-family: inherit;
+	text-align: center;
+	border: none;
+  padding: .675rem .3rem;
+  border-radius: 3rem;
+	font-size: 0.75rem;
+	font-weight: 300;
+	transition: all 0.3s;
+}
+.form__input:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.6);
+}
+.form__btn{
+	border: none;
+  background: #fff;
+  border-radius: .675rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+.form__btn:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.8);
+}
+.form__label{
+	text-align: center;
+}
+.operation.operation--transfer{
+	background-image: linear-gradient(to top left, #ffb003, #ffcb03);
+}
+.operation.operation--loan{
+	background-image: linear-gradient(to top left, #39b385, #9be15d);
+}
+.operation--close {
+  background-image: linear-gradient(to top left, #e52a5a, #ff585f);
+}
+
+/* Exceptions for Loan*/
+.form.form--loan {
+  grid-template-columns: 2.5fr 1fr 2.5fr;
+}
+.form__label--loan {
+  grid-row: 2;
+}
+/* End exceptions */
+
+/*LOGOUT TIMER*/
+.logout-timer{
+	margin-left: auto;
+	font-size: .875rem;
+	padding: 0 1rem;
+}
+.timer {
+  font-weight: 600;
+}
