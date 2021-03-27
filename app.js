@@ -95,7 +95,7 @@ function userLogin() {
       containerApp.classList.add('open')
       labelWelcome.textContent = `Welcome to your acount ${loginUser}`
       loginForm.style.display = 'none'
-      startTimer(300, labelTimer);
+      startTimer(30, labelTimer);
       logoutTimer()
       break;
 		}
@@ -137,5 +137,7 @@ btnClose.addEventListener('click', (e) => {
 function logoutTimer() {
   setInterval(() => {
     containerApp.classList.remove('open')
-  }, 300000)
+    loginForm.style.display = 'block'
+    labelWelcome.textContent = `Log in to get started`
+  }, 30000)
 }
