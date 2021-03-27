@@ -92,12 +92,12 @@ function userLogin() {
   const loginPin = Number(inputLoginPin.value)
 	for (const values of accounts) {
 		if (values.owner === loginUser && values.pin === loginPin) {
-			containerApp.classList.add('open')
-			labelWelcome.textContent = `Welcome to your acount ${loginUser}`
-      startTimer(30, labelTimer);
+      containerApp.classList.add('open')
+      labelWelcome.textContent = `Welcome to your acount ${loginUser}`
       loginForm.style.display = 'none'
+      startTimer(300, labelTimer);
       logoutTimer()
-			break;
+      break;
 		}
 		else if (values.owner !== loginUser || values.pin !== loginPin){
       labelWelcome.textContent = `Wrong Credentials`
@@ -119,8 +119,8 @@ function userLogout() {
   const logoutPin = Number(inputClosePin.value)
   if (logoutUser === loginUser && logoutPin === loginPin) {
     containerApp.classList.remove('open')
-    labelWelcome.textContent = `Log in to get started`
     loginForm.style.display = 'block'
+    labelWelcome.textContent = `Log in to get started`
   }
   else {
     alert(`Can't Log Out: Wrong Credentials`)
@@ -137,7 +137,5 @@ btnClose.addEventListener('click', (e) => {
 function logoutTimer() {
   setInterval(() => {
     containerApp.classList.remove('open')
-  }, 30000)
-  loginForm.style.display = 'block'
-  labelWelcome.textContent = `Log in to get started`
+  }, 300000)
 }
