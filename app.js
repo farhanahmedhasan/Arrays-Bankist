@@ -1,28 +1,28 @@
 'use strict';
 //Users Data
 const account1 = {
-  owner: 'hasan',
+  owner: 'Hasan Al Mamun',
   movements: [200, 450, -400, 3000, -650, -130, 70, 1300],
   interestRate: 1.2, // %
   pin: 1111,
 };
 
 const account2 = {
-  owner: 'noman',
+  owner: 'Noman Sheikh',
   movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
   interestRate: 1.5,
   pin: 2222,
 };
 
 const account3 = {
-  owner: 'Shabuj',
+  owner: 'Shabuj Mulla',
   movements: [200, -200, 340, -300, -20, 50, 400, -460],
   interestRate: 0.7,
   pin: 3333,
 };
 
 const account4 = {
-  owner: 'Sujit',
+  owner: 'Sujit Kundu',
   movements: [430, 1000, 700, 50, 90],
   interestRate: 1,
   pin: 4444,
@@ -86,20 +86,35 @@ function startTimer(duration, display) {
 	}, 1000);
 }
 
+//Computing UserName Hasan Al Mamun => ham
+function computingUserNames(acc) {
+  acc.forEach(accs => {
+    accs.userName = accs.owner.toLowerCase().split(' ').map(fWord => fWord[0]).join('')
+  })
+}
+computingUserNames(accounts);
+
+
 //--------------------------------------Login Functionality
 function userLogin() {
   const loginUser = inputLoginUser.value
   const loginPin = Number(inputLoginPin.value)
 	for (const values of accounts) {
-		if (values.owner === loginUser && values.pin === loginPin) {
+		if (values.userName === loginUser && values.pin === loginPin) {
       containerApp.classList.add('open')
-      labelWelcome.textContent = `Welcome to your acount ${loginUser}`
+      labelWelcome.textContent = `Welcome to your acount ${values.owner}`
       loginForm.style.display = 'none'
-      startTimer(30, labelTimer);
+      displayMovements(values.movements)
+
+      displayTotalDeposite(values.movements)
+      displayTotalWithdrew(values.movements)
+      displayCurrentBalance(values.movements)
+      
+      startTimer(3000, labelTimer);
       logoutTimer()
       break;
 		}
-		else if (values.owner !== loginUser || values.pin !== loginPin){
+		else if (values.userName !== loginUser || values.pin !== loginPin){
       labelWelcome.textContent = `Wrong Credentials`
 		}
 	}
@@ -139,5 +154,51 @@ function logoutTimer() {
     containerApp.classList.remove('open')
     loginForm.style.display = 'block'
     labelWelcome.textContent = `Log in to get started`
-  }, 30000)
+  }, 3000000)
+}
+
+//-----------------------------------------Movements Functionality-------------------------------
+//Display The Movements
+function displayMovements(movements) {
+  containerMovements.innerHTML = ''
+  movements.forEach((mov, i) => {
+    const type = mov < 0 ? `withdrawal` : `deposit`
+    const html = `<div class="movements__row">
+				<div class="movements__type movements__type--${type}">${i+1} ${type}</div>
+				<div class="movements__value">${Math.abs(mov)}৳</div>
+			</div>`
+    containerMovements.insertAdjacentHTML('afterbegin', html)
+  })
+}
+
+
+//------------Calculating The Balances: Depending on the accounts movements array
+//Calulate Total Deposites
+function displayTotalDeposite(accs) {
+  let sum = 0;
+  accs.filter(mov => {
+    if (mov > 0) {
+      sum += mov
+    }
+  })
+  labelSumIn.textContent = sum
+  return sum
+}
+
+//Calulate Total Withdrawal
+function displayTotalWithdrew(accs) {
+  let sum = 0;
+  accs.filter(mov => {
+    if (mov < 0) {
+      sum += mov
+    }
+  })
+  labelSumOut.textContent = Math.abs(sum)
+  return Math.abs(sum)
+}
+
+//Calculate the Balance: With reduceMethod
+function displayCurrentBalance(accs) {
+  const totalBalance = accs.reduce((accumulator, curMov) => accumulator + curMov, 0)
+  labelBalance.textContent = totalBalance + '৳'
 }
