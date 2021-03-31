@@ -3,14 +3,14 @@
 const account1 = {
   owner: 'Hasan Al Mamun',
   movements: [200, 450, -400, 3000, -650, -130, 70, 1300],
-  interestRate: 1.2, // %
+  interestRate: 1.9, // %
   pin: 1111,
 };
 
 const account2 = {
   owner: 'Noman Sheikh',
   movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
-  interestRate: 1.5,
+  interestRate: 2.5,
   pin: 2222,
 };
 
@@ -94,30 +94,33 @@ function computingUserNames(acc) {
 }
 computingUserNames(accounts);
 
+//Global Variable
+let currentAccount;
+
 
 //--------------------------------------Login Functionality
 function userLogin() {
-  const loginUser = inputLoginUser.value
-  const loginPin = Number(inputLoginPin.value)
-	for (const values of accounts) {
-		if (values.userName === loginUser && values.pin === loginPin) {
-      containerApp.classList.add('open')
-      labelWelcome.textContent = `Welcome to your acount ${values.owner}`
-      loginForm.style.display = 'none'
-      displayMovements(values.movements)
+  currentAccount = accounts.find(acc => acc.userName === inputLoginUser.value)
+  if (currentAccount?.pin === Number(inputLoginPin.value)) {
+    //Display UI Movements & Balance
+    containerApp.classList.add('open')
+    labelWelcome.textContent = `Welcome Back ${currentAccount.owner.split(' ')[0]}`
+    displayMovements(currentAccount.movements)
+    displayCurrentBalance(currentAccount.movements)
+    
+    //Clear Input Fields
+    inputLoginUser.value = inputLoginPin.value = ''
+    inputLoginPin.blur()
 
-      displayTotalDeposite(values.movements)
-      displayTotalWithdrew(values.movements)
-      displayCurrentBalance(values.movements)
-      
-      startTimer(3000, labelTimer);
-      logoutTimer()
-      break;
-		}
-		else if (values.userName !== loginUser || values.pin !== loginPin){
-      labelWelcome.textContent = `Wrong Credentials`
-		}
-	}
+    //Display Summary
+    displayTotalDeposite(currentAccount.movements)
+    displayTotalWithdrew(currentAccount.movements)
+    displayInterest(currentAccount.movements, currentAccount.interestRate)
+
+    startTimer(3000, labelTimer);
+    logoutTimer()
+  }
+  else labelWelcome.textContent = `Wrong Credentials`
 }
 
 //Login To The Account :Happens on click
@@ -128,18 +131,20 @@ btnLogin.addEventListener('click', (e) => {
 
 //-------------------------------------------Logout Functionality
 function userLogout() {
-  const loginUser = inputLoginUser.value
-  const loginPin = Number(inputLoginPin.value)
-  const logoutUser = inputCloseUser.value
-  const logoutPin = Number(inputClosePin.value)
-  if (logoutUser === loginUser && logoutPin === loginPin) {
-    containerApp.classList.remove('open')
-    loginForm.style.display = 'block'
-    labelWelcome.textContent = `Log in to get started`
+  const logOutAccount = accounts.find(acc => acc.userName === inputCloseUser.value)
+  console.log(currentAccount, logOutAccount);
+  if (logOutAccount === currentAccount) {
+    if (logOutAccount.pin === Number(inputClosePin.value)) {
+      containerApp.classList.remove('open')
+      labelWelcome.textContent = `Log in to get started`
+    }
+    else {
+      alert(`Wrong Credentials: Pfff try again`)
+    }   
   }
   else {
-    alert(`Can't Log Out: Wrong Credentials`)
-  }
+    alert(`Wrong Credentials: Pfff try again`)
+  }    
 }
 
 //Logout Account :Happens on click
@@ -175,26 +180,34 @@ function displayMovements(movements) {
 //------------Calculating The Balances: Depending on the accounts movements array
 //Calulate Total Deposites
 function displayTotalDeposite(accs) {
-  let sum = 0;
-  accs.filter(mov => {
-    if (mov > 0) {
-      sum += mov
-    }
-  })
-  labelSumIn.textContent = sum
-  return sum
+  const incomes = accs
+    .filter(mov => mov > 0)
+    .reduce((accumulator, curMove) => accumulator + curMove)
+  labelSumIn.textContent = `${incomes}৳`
 }
 
 //Calulate Total Withdrawal
 function displayTotalWithdrew(accs) {
-  let sum = 0;
-  accs.filter(mov => {
-    if (mov < 0) {
-      sum += mov
-    }
-  })
-  labelSumOut.textContent = Math.abs(sum)
-  return Math.abs(sum)
+  const expenses = accs.filter(mov => mov < 0)
+  if (!expenses.length) labelSumOut.textContent = `0000৳`
+  else {
+    const totalExpenses = expenses.reduce((accumulator, curMove) => accumulator + curMove)
+    labelSumOut.textContent = `${Math.abs(totalExpenses)}৳`
+  }
+}
+
+//Calculate The Interest
+function displayInterest(accs, interestRate) {
+  const totalInterest = accs
+    .filter(mov => mov > 0)
+    .map(deposite => (deposite * interestRate) / 100)
+    .filter((int) => int > 10) //Will Exclude if your Interest is less than 10tk
+  
+  if (!totalInterest.length)labelSumInterest.textContent = `0000৳`
+  else {
+    const finalInterest  = totalInterest.reduce((accumulator, interest) => accumulator + interest)
+    labelSumInterest.textContent = `${finalInterest}৳`    
+  }
 }
 
 //Calculate the Balance: With reduceMethod
