@@ -43,7 +43,6 @@ const labelTimer = document.querySelector('.timer')
 //Container
 const containerApp = document.querySelector('.app')
 const containerMovements = document.querySelector('.movements')
-const loginForm = document.querySelector('.login')
 
 //Inputs Elements
 const inputLoginUser = document.querySelector('.login__input--user')
@@ -86,6 +85,14 @@ function startTimer(duration, display) {
 	}, 1000);
 }
 
+//Logout Happens When the timer runs out
+function logoutTimer() {
+  setInterval(() => {
+    containerApp.classList.remove('open')
+    labelWelcome.textContent = `Log in to get started`
+  }, 3000000)
+}
+
 //Computing UserName Hasan Al Mamun => ham
 function computingUserNames(acc) {
   acc.forEach(accs => {
@@ -97,26 +104,27 @@ computingUserNames(accounts);
 //Global Variable
 let currentAccount;
 
+//--------------------------------------Update the UI-------------------------------------
+function updateUI(acc) {
+  displayMovements(acc.movements)
+  displayCurrentBalance(acc)
+  displayTotalDeposite(acc.movements)
+  displayTotalWithdrew(acc.movements)
+  displayInterest(acc,acc.interestRate)  
+}
 
-//--------------------------------------Login Functionality
+//--------------------------------------Login Functionality---------------------------------------
 function userLogin() {
   currentAccount = accounts.find(acc => acc.userName === inputLoginUser.value)
   if (currentAccount?.pin === Number(inputLoginPin.value)) {
-    //Display UI Movements & Balance
     containerApp.classList.add('open')
     labelWelcome.textContent = `Welcome Back ${currentAccount.owner.split(' ')[0]}`
-    displayMovements(currentAccount.movements)
-    displayCurrentBalance(currentAccount.movements)
-    
     //Clear Input Fields
     inputLoginUser.value = inputLoginPin.value = ''
     inputLoginPin.blur()
-
-    //Display Summary
-    displayTotalDeposite(currentAccount.movements)
-    displayTotalWithdrew(currentAccount.movements)
-    displayInterest(currentAccount.movements, currentAccount.interestRate)
-
+    //Display UI
+    updateUI(currentAccount)
+    //Timer
     startTimer(3000, labelTimer);
     logoutTimer()
   }
@@ -129,38 +137,24 @@ btnLogin.addEventListener('click', (e) => {
 	userLogin()
 })
 
-//-------------------------------------------Logout Functionality
+//-------------------------------------------Close Account funtionality-----------------------------
 function userLogout() {
-  const logOutAccount = accounts.find(acc => acc.userName === inputCloseUser.value)
-  console.log(currentAccount, logOutAccount);
-  if (logOutAccount === currentAccount) {
-    if (logOutAccount.pin === Number(inputClosePin.value)) {
-      containerApp.classList.remove('open')
-      labelWelcome.textContent = `Log in to get started`
-    }
-    else {
-      alert(`Wrong Credentials: Pfff try again`)
-    }   
+  if (currentAccount.userName === inputCloseUser.value &&
+    currentAccount.pin === Number(inputClosePin.value)) {
+    const index = accounts.findIndex(acc =>acc.userName === currentAccount.userName)
+    accounts.splice(index, 1)
+    containerApp.classList.remove('open')
+    labelWelcome.textContent = `Login to get started`
   }
-  else {
-    alert(`Wrong Credentials: Pfff try again`)
-  }    
+  inputCloseUser.value = inputClosePin.value = ''
 }
 
-//Logout Account :Happens on click
+//Close Account :Happens on click
 btnClose.addEventListener('click', (e) => {
   e.preventDefault()
   userLogout()
 })
 
-//Logout Happens When the timer runs out
-function logoutTimer() {
-  setInterval(() => {
-    containerApp.classList.remove('open')
-    loginForm.style.display = 'block'
-    labelWelcome.textContent = `Log in to get started`
-  }, 3000000)
-}
 
 //-----------------------------------------Movements Functionality-------------------------------
 //Display The Movements
@@ -177,12 +171,22 @@ function displayMovements(movements) {
 }
 
 
-//------------Calculating The Balances: Depending on the accounts movements array
+//------------Calculating The Summary: Depending on the accounts movements array------------------
+
+//sum Of movements Array
+const sum = (accumulator, curMov) => accumulator + curMov
+
+//Calculate the Balance: With reduceMethod
+function displayCurrentBalance(accs) {
+  accs.balance = accs.movements.reduce(sum,0)//CallBack Function
+  labelBalance.textContent = accs.balance + '৳'
+}
+
 //Calulate Total Deposites
 function displayTotalDeposite(accs) {
   const incomes = accs
     .filter(mov => mov > 0)
-    .reduce((accumulator, curMove) => accumulator + curMove)
+    .reduce(sum) //CallBack Function
   labelSumIn.textContent = `${incomes}৳`
 }
 
@@ -191,27 +195,60 @@ function displayTotalWithdrew(accs) {
   const expenses = accs.filter(mov => mov < 0)
   if (!expenses.length) labelSumOut.textContent = `0000৳`
   else {
-    const totalExpenses = expenses.reduce((accumulator, curMove) => accumulator + curMove)
+    const totalExpenses = expenses.reduce(sum)
     labelSumOut.textContent = `${Math.abs(totalExpenses)}৳`
   }
 }
 
 //Calculate The Interest
-function displayInterest(accs, interestRate) {
-  const totalInterest = accs
-    .filter(mov => mov > 0)
-    .map(deposite => (deposite * interestRate) / 100)
-    .filter((int) => int > 10) //Will Exclude if your Interest is less than 10tk
-  
-  if (!totalInterest.length)labelSumInterest.textContent = `0000৳`
-  else {
-    const finalInterest  = totalInterest.reduce((accumulator, interest) => accumulator + interest)
-    labelSumInterest.textContent = `${finalInterest}৳`    
+function displayInterest(acc,interestRate) {
+  const totalBalance = acc.balance
+  const interest = (totalBalance * interestRate) / 100
+  labelSumInterest.textContent = `${interest}৳`    
+}
+
+//-----------------------------Transfer Money Functionality-----------------------------
+function transferMoney() {
+  const amount = Number(inputTransferAmmount.value)
+  const transferTo = inputTransferTo.value
+  const receiverAcc = accounts.find(acc => acc.userName === transferTo)
+
+  inputTransferAmmount.value = inputTransferTo.value = ''
+  inputTransferAmmount.blur()
+  if (amount > 0 && amount <= currentAccount.balance &&
+    receiverAcc && receiverAcc.userName !== currentAccount.userName) {
+    currentAccount.movements.push(-amount)
+    receiverAcc.movements.push(amount)
+    
+    //Update The UI
+    updateUI(currentAccount)  
+  }
+  else  {
+    alert(`Wrong Conditions`)
   }
 }
 
-//Calculate the Balance: With reduceMethod
-function displayCurrentBalance(accs) {
-  const totalBalance = accs.reduce((accumulator, curMov) => accumulator + curMov, 0)
-  labelBalance.textContent = totalBalance + '৳'
+//Happens on click or Enter that btn
+btnTransfer.addEventListener('click', (e) => {
+  e.preventDefault()
+  transferMoney()
+})
+
+//------------------------------------Request Loan Functionality-----------------------------------
+function requestLoan() {
+  let loan = Number(inputLoanAmmount.value)
+  // const bigDeposite = currentAccount.movements.reduce((total,curValue)=> Math.max(total,curValue))
+  // const bigDeposite = Math.max(...currentAccount.movements)
+  const anyDeposite = currentAccount.movements.some(mov => mov >= loan * .1)
+
+  if (loan > 0 && anyDeposite) {
+  currentAccount.movements.push(loan)
+  updateUI(currentAccount)
+  }
+  inputLoanAmmount.value = ''
 }
+
+btnLoan.addEventListener('click', e => {
+  e.preventDefault()
+  requestLoan()
+})
