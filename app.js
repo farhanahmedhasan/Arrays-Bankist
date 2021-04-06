@@ -317,5 +317,3 @@ btnLoan.addEventListener('click', e => {
   e.preventDefault()
   requestLoan()
 })
-currentAccount = account1
-updateUI(currentAccount)
