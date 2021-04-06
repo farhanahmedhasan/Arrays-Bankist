@@ -16,7 +16,7 @@ const account1 = {
     '2021-04-05T10:51:36.790Z',
   ],
   currency: 'EUR',
-  locale: 'pt-PT', // de-DE
+  local: 'pt-PT', // de-DE
 };
 
 const account2 = {
@@ -35,7 +35,7 @@ const account2 = {
     '2020-07-26T12:01:20.894Z',
   ],
   currency: 'USD',
-  locale: 'en-US',
+  local: 'en-US',
 };
 
 const account3 = {
@@ -88,12 +88,16 @@ const btnSort = document.querySelector('.btn--sort')
 
 function getDate() {
   const now = new Date()
-  const day = String(now.getDate()).padStart(2, 0)
-  const month = String(now.getMonth() + 1).padStart(2,0)
-  const year = now.getFullYear() //.slice('2')
-  const hour = now.getHours()
-  const min = `${now.getMinutes()}`.padStart(2,0)
-  labelDate.textContent = `${day}/${month}/${year} , Time: ${hour}:${min}`
+  const option = {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    weekday : 'short'
+  }
+  const local = navigator.language
+  labelDate.textContent = `${new Intl.DateTimeFormat(local,option).format(now)}`
 }
 
 // Set The Timer
@@ -134,10 +138,7 @@ let currentAccount;
 function updateUI(acc) {
   getDate()
   displayMovements(acc)
-  displayCurrentBalance(acc)
-  displayTotalDeposite(acc.movements)
-  displayTotalWithdrew(acc.movements)
-  displayInterest(acc,acc.interestRate)  
+  displaySummary(acc)
 }
 
 //--------------------------------------Login Functionality---------------------------------------
@@ -185,23 +186,31 @@ btnClose.addEventListener('click', (e) => {
 
 //-----------------------------------------Movements Functionality-------------------------------
 //Formate Movement Dates 
-function formateMovementDates(dates) {
+function formateMovementDates(dates,local) {
   const calcDaysPassed = (day1, day2) => Math.round((Math.abs(day2 - day1) / (1000 * 60 * 60 * 24)))
   const daysPassed = calcDaysPassed(new Date(), dates);
 
   if (daysPassed === 0) return `Today`
   if (daysPassed === 1) return `Yesterday`
   if (daysPassed <= 7) return `${daysPassed} days ago`
-  else {
-    const day = String(dates.getDate()).padStart(2, 0)
-    const month = String(dates.getMonth() + 1).padStart(2, 0)
-    const year = dates.getFullYear()
-    return `${day}/${month}/${year}`  
+  const option = {
+    month: '2-digit',
+    year: 'numeric',
+    day: '2-digit'
   }
+  return `${new Intl.DateTimeFormat(local,option).format(dates)}`  
+}
+
+//Formate Money Intl
+function formateMoneyIntl(value, acc) {
+  const option = {
+    style: 'currency',
+    currency : acc.currency
+  }
+  return new Intl.NumberFormat(acc.local, option).format(value)
 }
 
 //Display The Movements
-
 function displayMovements(acc, sort= false) {
   containerMovements.innerHTML = ''
   //Sorting Movements Array
@@ -211,12 +220,12 @@ function displayMovements(acc, sort= false) {
     const type = mov < 0 ? `withdrawal` : `deposit`
 
     const date = new Date(acc.movementsDates[i])
-    const displayDate = formateMovementDates(date)
+    const displayDate = formateMovementDates(date,acc.local)
 
     const html = `<div class="movements__row">
 				<div class="movements__type movements__type--${type}">${i + 1} ${type}</div>
         <div class="movements__date">${displayDate}</div>
-				<div class="movements__value">${Math.abs(mov).toFixed(2)}৳</div>
+				<div class="movements__value">${formateMoneyIntl(mov,acc)}</div>
 			</div>`
     containerMovements.insertAdjacentHTML('afterbegin', html)
   })
@@ -224,48 +233,41 @@ function displayMovements(acc, sort= false) {
 
 
 //------------Calculating The Summary: Depending on the accounts movements array------------------
+function displaySummary(acc) {
+  //sum Of movements Array
+  const sum = (accumulator, curMov) => accumulator + curMov
 
-//sum Of movements Array
-const sum = (accumulator, curMov) => accumulator + curMov
-
-//Calculate the Balance: With reduceMethod
-function displayCurrentBalance(accs) {
-  accs.balance = accs.movements.reduce(sum,0)//CallBack Function
-  labelBalance.textContent = accs.balance.toFixed(2) + '৳'
-}
-
-//Calulate Total Deposites
-function displayTotalDeposite(accs) {
-  const incomes = accs
+  //Display Balance
+  acc.balance = acc.movements.reduce(sum,0)//CallBack Function
+  labelBalance.textContent = formateMoneyIntl(acc.balance, acc)
+  
+  //Calulate Total Deposites
+  const incomes = acc.movements
     .filter(mov => mov > 0)
     .reduce(sum) //CallBack Function
-  labelSumIn.textContent = `${incomes.toFixed(2)}৳`
-}
-
-//Calulate Total Withdrawal
-function displayTotalWithdrew(accs) {
-  const expenses = accs.filter(mov => mov < 0)
-  if (!expenses.length) labelSumOut.textContent = `0000৳`
+  labelSumIn.textContent = formateMoneyIntl(incomes, acc)
+  
+  //Calulate Total Withdrawal
+  const expenses = acc.movements.filter(mov => mov < 0)
+  if (!expenses.length) labelSumOut.textContent = formateMoneyIntl(0,acc)
   else {
     const totalExpenses = expenses.reduce(sum)
-    labelSumOut.textContent = `${Math.abs(totalExpenses).toFixed(2)}৳`
+    labelSumOut.textContent = formateMoneyIntl(Math.abs(totalExpenses),acc)
   }
-}
 
-//Calculate The Interest
-function displayInterest(acc,interestRate) {
+  //Calculate The Interest
   const totalBalance = acc.balance
-  const interest = (totalBalance * interestRate) / 100
-  labelSumInterest.textContent = `${interest.toFixed(2)}৳`    
+  const interest = (totalBalance * acc.interestRate) / 100
+  labelSumInterest.textContent = formateMoneyIntl(interest, acc)
+  
+  //SORTING Happens On Button Click
+  let sorted = true;
+  btnSort.addEventListener('click', (e) => {
+    e.preventDefault()
+    displayMovements(currentAccount, sorted)
+    sorted = !sorted;
+  })
 }
-
-//SORTING Happens On Button Click
-let sorted = true;
-btnSort.addEventListener('click', (e) => {
-  e.preventDefault()
-  displayMovements(currentAccount, sorted)
-  sorted = !sorted;
-})
 
 //-----------------------------Transfer Money Functionality-----------------------------
 function transferMoney() {
@@ -315,3 +317,5 @@ btnLoan.addEventListener('click', e => {
   e.preventDefault()
   requestLoan()
 })
+currentAccount = account1
+updateUI(currentAccount)
