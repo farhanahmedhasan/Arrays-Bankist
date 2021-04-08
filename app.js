@@ -43,6 +43,18 @@ const account3 = {
   movements: [200, -200, 340, -300, -20, 50, 400, -460],
   interestRate: 0.7,
   pin: 3333,
+  movementsDates: [
+    '2019-11-01T13:15:33.035Z',
+    '2019-11-30T09:48:16.867Z',
+    '2019-12-25T06:04:23.907Z',
+    '2020-01-25T14:18:46.235Z',
+    '2020-02-05T16:33:06.386Z',
+    '2020-04-10T14:43:26.374Z',
+    '2020-06-25T18:49:59.371Z',
+    '2020-07-26T12:01:20.894Z',
+  ],
+  currency: 'USD',
+  local: 'en-US',
 };
 
 const account4 = {
@@ -50,6 +62,18 @@ const account4 = {
   movements: [430, 1000, 700, 50, 90],
   interestRate: 1,
   pin: 4444,
+  movementsDates: [
+    '2019-11-18T21:31:17.178Z',
+    '2019-12-23T07:42:02.383Z',
+    '2020-01-28T09:15:04.904Z',
+    '2020-04-01T10:17:24.185Z',
+    '2020-05-08T14:11:59.604Z',
+    '2021-04-03T17:01:17.194Z',
+    '2021-04-04T23:36:17.929Z',
+    '2021-04-05T10:51:36.790Z',
+  ],
+  currency: 'EUR',
+  local: 'pt-PT', // de-DE
 };
 
 const accounts = [account1, account2, account3, account4]
@@ -100,27 +124,33 @@ function getDate() {
   labelDate.textContent = `${new Intl.DateTimeFormat(local,option).format(now)}`
 }
 
-// Set The Timer
-function startTimer(duration, display) {
-  let timer = duration, minutes, seconds;
-  setInterval(function () {
-    minutes = parseInt(timer / 60, 10);
-    seconds = parseInt(timer % 60, 10);
-    minutes = minutes < 10 ? "0" + minutes : minutes;
-    seconds = seconds < 10 ? "0" + seconds : seconds;
-    display.textContent = `${minutes}:${seconds}`;
-    if (--timer < 0) {
-      timer = duration;
-    }
-	}, 1000);
-}
+//Set THe logOutTimer
+const startlogOutTimer = function () {
+  //Set the time 
+  let time = 40
 
-//Logout Happens When the timer runs out
-function logoutTimer() {
-  setInterval(() => {
-    containerApp.classList.remove('open')
-    labelWelcome.textContent = `Log in to get started`
-  }, 3000000)
+  //Calling this function immeditely to preset the previous 0:00 time
+  const tick = function() {
+    const min = String(Math.floor(time / 60)).padStart(2,0)
+    const sec = String(time % 60).padStart(2,0)
+
+    labelTimer.textContent = `${min}:${sec}`
+    console.log(`${min}:${sec}`);
+
+    //When time runs out clear timer and hide UI
+    if (time === 0) {
+      clearInterval(timer)
+      currentAccount = undefined
+      containerApp.classList.remove('open')
+      labelWelcome.textContent = `Login to get started`
+    }
+
+    //Decrease The time
+    time--
+  }
+  tick()
+  const timer = setInterval(tick, 1000)
+  return timer
 }
 
 //Computing UserName Hasan Al Mamun => ham
@@ -132,7 +162,7 @@ function computingUserNames(acc) {
 computingUserNames(accounts);
 
 //Global Variable
-let currentAccount;
+let currentAccount,timer;
 
 //--------------------------------------Update the UI-------------------------------------
 function updateUI(acc) {
@@ -153,8 +183,8 @@ function userLogin() {
     //Display UI
     updateUI(currentAccount)
     //Timer
-    startTimer(3000, labelTimer);
-    logoutTimer()
+    if(timer) clearInterval(timer)
+    timer = startlogOutTimer()
   }
   else labelWelcome.textContent = `Wrong Credentials`
 }
@@ -169,10 +199,10 @@ btnLogin.addEventListener('click', (e) => {
 function userLogout() {
   if (currentAccount.userName === inputCloseUser.value &&
     currentAccount.pin === Number(inputClosePin.value)) {
-    const index = accounts.findIndex(acc =>acc.userName === currentAccount.userName)
-    accounts.splice(index, 1)
+    currentAccount = undefined
     containerApp.classList.remove('open')
     labelWelcome.textContent = `Login to get started`
+    clearInterval(timer)
   }
   inputCloseUser.value = inputClosePin.value = ''
 }
@@ -279,15 +309,19 @@ function transferMoney() {
   inputTransferAmmount.blur()
   if (amount > 0 && amount <= currentAccount.balance &&
     receiverAcc && receiverAcc.userName !== currentAccount.userName) {
-    currentAccount.movements.push(-amount)
-    receiverAcc.movements.push(amount)
+    setTimeout(() => {
+      currentAccount.movements.push(-amount)
+      receiverAcc.movements.push(amount)
 
-    //Pushing Dates
-    currentAccount.movementsDates.push(new Date().toISOString())
-    receiverAcc.movementsDates.push(new Date().toISOString()) 
-    
-    //Update The UI
-    updateUI(currentAccount)  
+      //Pushing Dates
+      currentAccount.movementsDates.push(new Date().toISOString())
+      receiverAcc.movementsDates.push(new Date().toISOString()) 
+      
+      //Update The UI
+      updateUI(currentAccount)
+    }, 2000)
+    if (timer) clearInterval(timer)
+    timer = startlogOutTimer()
   }
   else  {
     alert(`Wrong Conditions`)
@@ -306,14 +340,38 @@ function requestLoan() {
   const anyDeposite = currentAccount.movements.some(mov => mov >= loan * .1)
 
   if (loan > 0 && anyDeposite) {
-    currentAccount.movements.push(loan)
-    currentAccount.movementsDates.push(new Date().toISOString()) //Pushinf Dates
-    updateUI(currentAccount)
+    setTimeout(() => {
+      currentAccount.movements.push(loan)
+      currentAccount.movementsDates.push(new Date().toISOString()) //Pushinf Dates
+      updateUI(currentAccount)
+    }, 2000)
+    if(timer) clearInterval(timer)
+    timer = startlogOutTimer()
   }
   inputLoanAmmount.value = ''
 }
-
 btnLoan.addEventListener('click', e => {
   e.preventDefault()
   requestLoan()
 })
+
+//setTimeout function's Callback will only execute once after a certain ammounts of time
+// const ingredients = ['Cheese','Chicken', '']
+// const orderPizza = setTimeout((...items) => {
+//   console.log(`Here Is your Pizza with ${items}`);
+// }, 3000 , ...ingredients)
+// console.log('Waiting.....');
+
+// if (ingredients.includes('Mashroom')) clearTimeout(orderPizza)
+
+//SetInterval Function Call the callback again n again depending on given time
+// setInterval(() => {
+//   const now = new Date()
+//   const option = {
+//     hour: 'numeric',
+//     minute: 'numeric',
+//     second: 'numeric'
+//   }
+//   const local = navigator.language
+//   console.log(Intl.DateTimeFormat(local,option).format(now));
+// },1000)
